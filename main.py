@@ -71,7 +71,7 @@ def main():
         application.run_webhook(
             listen="0.0.0.0",
             port=PORT,
-            webhook_url=f"{RENDER_EXTERNAL_URL}/webhook",
+            webhook_url=f{RENDER_EXTERNAL_URL},
             secret_token=os.getenv("WEBHOOK_SECRET", "tavolo-secret")  # 可選：增加安全性
         )
     else:
@@ -80,6 +80,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
