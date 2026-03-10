@@ -1,11 +1,21 @@
 import os
+import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from openai import OpenAI
 
+# 設定日誌
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
 # 讀取環境變數
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 KIMI_API_KEY = os.getenv("KIMI_API_KEY")
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render 自動提供
+PORT = int(os.getenv("PORT", 8443))
 
 # 初始化 Kimi 客戶端
 client = OpenAI(
@@ -25,13 +35,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if user_id not in user_histories:
         user_histories[user_id] = [
-            {"role": "system", "content": "你是 Tavolo Kids Living 的智能客服助手，專業友善，使用繁體中文回答。"}
+            {"role": "system", "content": "你是 Tavolo Kids Living 的智能客服助手，專業友善，使用繁體中文回答。公司主營高品質兒童家具，提供送貨安裝服務。"}
         ]
     
     user_histories[user_id].append({"role": "user", "content": user_message})
     
     try:
-        # 呼叫 Kimi API（不使用 tools，避免錯誤）
         response = client.chat.completions.create(
             model="moonshot-v1-8k",
             messages=user_histories[user_id],
@@ -48,14 +57,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(ai_reply)
         
     except Exception as e:
-        print(f"Error: {e}")
-        await update.message.reply_text("抱歉，處理時出現問題。")
+        logger.error(f"Kimi API Error: {e}")
+        await update.message.reply_text("抱歉，處理時出現問題，請稍後再試。")
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    application.run_polling()
+    
+    # 判斷環境：Render 用 Webhook，本地用 Polling
+    if RENDER_EXTERNAL_URL:
+        logger.info(f"Starting webhook on {RENDER_EXTERNAL_URL}")
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=f"{RENDER_EXTERNAL_URL}/webhook",
+            secret_token=os.getenv("WEBHOOK_SECRET", "tavolo-secret")  # 可選：增加安全性
+        )
+    else:
+        logger.info("Starting polling (local development)")
+        application.run_polling()
 
 if __name__ == "__main__":
     main()
