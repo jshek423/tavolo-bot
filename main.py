@@ -66,7 +66,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # 判斷環境：Render 用 Webhook，本地用 Polling
-    if RENDER_EXTERNAL_URL:
+    if False:
         logger.info(f"Starting webhook on {RENDER_EXTERNAL_URL}")
         application.run_webhook(
             listen="0.0.0.0",
@@ -80,3 +80,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
