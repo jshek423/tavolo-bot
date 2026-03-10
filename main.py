@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # 讀取環境變數
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 KIMI_API_KEY = os.getenv("KIMI_API_KEY")
-RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL") or "https://tavolo-bot.onrender.com/"
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL") or "https://tavolo-bot.onrender.com"
 PORT = int(os.getenv("PORT", 8443))
 
 # 初始化 Kimi 客戶端
@@ -80,5 +80,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
